@@ -2,7 +2,7 @@ package formatter
 
 import (
 	"fmt"
-	. "github.com/Nightgunner5/go.cms/document"
+	. "llamaslayers.net/go.cms/document"
 	"html"
 )
 

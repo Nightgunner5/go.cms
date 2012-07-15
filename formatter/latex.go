@@ -1,6 +1,6 @@
 package formatter
 
-import . "github.com/Nightgunner5/go.cms/document"
+import . "llamaslayers.net/go.cms/document"
 
 type LaTeXFormatter int
 
