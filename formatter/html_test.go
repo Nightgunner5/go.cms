@@ -26,10 +26,16 @@ func ExampleHTMLFormatter_Format() {
 	// <!DOCTYPE html>
 	// <html>
 	// <head>
+	// <meta charset="utf-8">
 	// <title>Test page</title>
+	// <link href="/css/bootstrap.css" rel="stylesheet">
 	// </head>
 	// <body>
+	// <div class="container">
+	// <h1 class="page-header">Test page</h1>
 	// <p>This <em>is</em> <strong>a <em>test.</em></strong></p>
+	// </div>
+	// <script src="/js/bootstrap.js" async></script>
 	// </body>
 	// </html>
 }

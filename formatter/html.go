@@ -19,7 +19,11 @@ func (HTMLFormatter) Format(element Element) string {
 ` + HTML.documentHeader(el) + `
 </head>
 <body>
+<div class="container">
+<h1 class="page-header">` + html.EscapeString(el.Title) + `</h1>
 ` + HTML.formatContent(el.Contents()) + `
+</div>
+<script src="/js/bootstrap.js" async></script>
 </body>
 </html>`
 	case *Italic:
@@ -41,7 +45,9 @@ func (HTMLFormatter) Format(element Element) string {
 }
 
 func (HTMLFormatter) documentHeader(doc *Document) string {
-	return "<title>" + html.EscapeString(doc.Title) + "</title>"
+	return `<meta charset="utf-8">
+<title>` + html.EscapeString(doc.Title) + `</title>
+<link href="/css/bootstrap.css" rel="stylesheet">`
 }
 
 func (HTMLFormatter) formatContent(content Content) string {
