@@ -2,8 +2,8 @@ package formatter
 
 import (
 	"fmt"
-	. "llamaslayers.net/go.cms/document"
 	"html"
+	. "llamaslayers.net/go.cms/document"
 )
 
 type HTMLFormatter int
