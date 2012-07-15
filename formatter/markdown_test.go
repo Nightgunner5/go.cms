@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func ExampleHTMLFormatter_Format() {
+func ExampleMarkdownFormatter_Format() {
 	doc := &Document{
 		"Test page",
 		Content{
@@ -20,21 +20,16 @@ func ExampleHTMLFormatter_Format() {
 			},
 		},
 	}
-	fmt.Println(HTML.Format(doc))
+	fmt.Println(Markdown.Format(doc))
 
 	// Output:
-	// <!DOCTYPE html>
-	// <html>
-	// <head>
-	// <title>Test page</title>
-	// </head>
-	// <body>
-	// <p>This <em>is</em> <strong>a <em>test.</em></strong></p>
-	// </body>
-	// </html>
+	// Test page
+	// ==========
+	// 
+	// This _is_ **a _test._**
 }
 
-func BenchmarkHTML(b *testing.B) {
+func BenchmarkMarkdown(b *testing.B) {
 	b.StopTimer()
 	doc := &Document{
 		"Test page",
@@ -52,6 +47,6 @@ func BenchmarkHTML(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		HTML.Format(doc)
+		Markdown.Format(doc)
 	}
 }

@@ -22,14 +22,3 @@ func (b *Bold) Element() Element {
 
 func (b *Bold) Inline() {
 }
-
-type Underline struct {
-	Content
-}
-
-func (u *Underline) Element() Element {
-	return u
-}
-
-func (u *Underline) Inline() {
-}

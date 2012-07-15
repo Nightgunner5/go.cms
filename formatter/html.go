@@ -26,12 +26,14 @@ func (HTMLFormatter) Format(element Element) string {
 		return "<em>" + HTML.formatContent(el.Contents()) + "</em>"
 	case *Bold:
 		return "<strong>" + HTML.formatContent(el.Contents()) + "</strong>"
-	case *Underline:
-		return "<u>" + HTML.formatContent(el.Contents()) + "</u>"
 	case *LineBreak:
 		return "<br>"
 	case *Paragraph:
 		return "<p>" + HTML.formatContent(el.Contents()) + "</p>"
+	case *Image:
+		return "<img src=\"" + html.EscapeString(el.URL) + "\" alt=\"" + html.EscapeString(el.Description) + "\" title=\"" + html.EscapeString(el.Description) + "\">"
+	case *Link:
+		return "<a href=\"" + html.EscapeString(el.URL) + "\">" + HTML.formatContent(el.Contents()) + "</a>"
 	case *LeafElement:
 		return html.EscapeString(el.Text)
 	}
