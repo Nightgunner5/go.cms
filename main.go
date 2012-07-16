@@ -8,6 +8,8 @@ import (
 var flagReadme = flag.Bool("readme", false, "Prints a README and exits.")
 var flagReadmeFormat = flag.String("readme-format", "Markdown", "Other formats available are LaTeX and HTML.")
 var flagHttpAddr = flag.String("http", ":8080", "The host (optional) and port to listen on for HTTP connections.")
+var flagNoSpdy = flag.Bool("nospdy", false, "Disables SPDY and TLS.")
+var flagFakeLag = flag.Int64("fakelag", 0, "If fakelag is positive, each request will wait fakelag milliseconds before responding.")
 
 func main() {
 	flag.Parse()
@@ -17,5 +19,5 @@ func main() {
 		return
 	}
 
-	http.Startup(*flagHttpAddr)
+	http.Startup(*flagHttpAddr, *flagFakeLag, *flagNoSpdy)
 }

@@ -3,9 +3,10 @@ package http
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/sha512"
+	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	spdy "github.com/jmckaskill/gospdy"
 	. "llamaslayers.net/go.cms/document"
 	"llamaslayers.net/go.cms/formatter"
 	"log"
@@ -14,13 +15,28 @@ import (
 	"time"
 )
 
-func Startup(addr string) {
+var pauseBeforeResponding time.Duration
+
+func requiredHeaders(w http.ResponseWriter) {
+	if pauseBeforeResponding > 0 {
+		time.Sleep(pauseBeforeResponding)
+	}
+	w.Header().Set("Server", "go get llamaslayers.net/go.cms")
+}
+
+func Startup(addr string, fakelag int64, nospdy bool) {
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/favicon.ico", noContentHandler)
 
+	pauseBeforeResponding = time.Duration(fakelag) * time.Millisecond
+
 	log.Print("Now listening on ", addr)
 
-	log.Fatal(http.ListenAndServe(addr, nil))
+	if nospdy {
+		log.Fatal(http.ListenAndServe(addr, nil))
+	} else {
+		log.Fatal(spdy.ListenAndServeTLS(addr, "cert.pem", "key.pem", nil))
+	}
 }
 
 type static_page struct {
@@ -29,17 +45,17 @@ type static_page struct {
 }
 
 func _etag(in []byte) string {
-	hash := sha512.New()
-	// Error can be safely ignored here as it is never set in sha512's code.
+	hash := sha1.New()
+	// Error can be safely ignored here as it is never set in sha1's code.
 	hash.Write(in)
-	var output [64]byte
-	return hex.EncodeToString(hash.Sum(output[:]))
+	var output [0]byte
+	return "\"" + hex.EncodeToString(hash.Sum(output[:])) + "\""
 }
 
-func _compress(in []byte) []byte {
+func _compress(in []byte, level int) []byte {
 	var b bytes.Buffer
 	// Error can be safely ignored here as it is only set for invalid compression levels.
-	w, _ := gzip.NewWriterLevel(&b, gzip.BestCompression)
+	w, _ := gzip.NewWriterLevel(&b, level)
 	// Error can be safely ignored here as it would only be set if the compressor
 	// had a serious bug in it and passed the wrong argument.
 	w.Write(in)
@@ -50,7 +66,7 @@ func _compress(in []byte) []byte {
 // Static pages are compressed and cached as aggressively as possible.
 // Expiration dates are 2 weeks from the time of access.
 func MakeStaticPage(contentType string, content []byte) http.Handler {
-	return &static_page{contentType, _etag(content), content, _compress(content)}
+	return &static_page{contentType, _etag(content), content, _compress(content, gzip.BestCompression)}
 }
 
 // Use this for content like images, which are already compressed.
@@ -59,15 +75,18 @@ func MakeStaticPageNoCompress(contentType string, content []byte) http.Handler {
 }
 
 func (page *static_page) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	requiredHeaders(w)
 	if req.Header.Get("If-None-Match") == page.etag {
 		w.WriteHeader(http.StatusNotModified)
 		return
 	}
 
 	w.Header().Set("Content-Type", page.contentType)
-	w.Header().Set("Vary", "Accept-Encoding")
 	w.Header().Set("ETag", page.etag)
 	w.Header().Set("Expires", time.Now().AddDate(0, 0, 14).Format(time.RFC1123))
+	if page.compressed != nil {
+		w.Header().Set("Vary", "Accept-Encoding")
+	}
 	if page.compressed != nil && strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
 		w.Header().Set("Content-Length", fmt.Sprint(len(page.compressed)))
 		w.Header().Set("Content-Encoding", "gzip")
@@ -79,21 +98,27 @@ func (page *static_page) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func DoPage(w http.ResponseWriter, req *http.Request, doc *Document, status int) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	requiredHeaders(w)
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	w.Header().Set("Vary", "Accept-Encoding")
 	if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
+		buf := _compress([]byte(formatter.HTML.Format(doc)), gzip.DefaultCompression)
 		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("Content-Length", fmt.Sprint(len(buf)))
 		w.WriteHeader(status)
 		gz := gzip.NewWriter(w)
 		gz.Write([]byte(formatter.HTML.Format(doc)))
 		gz.Close()
 	} else {
+		buf := []byte(formatter.HTML.Format(doc))
+		w.Header().Set("Content-Length", fmt.Sprint(len(buf)))
 		w.WriteHeader(status)
-		w.Write([]byte(formatter.HTML.Format(doc)))
+		w.Write(buf)
 	}
 }
 
 func noContentHandler(w http.ResponseWriter, req *http.Request) {
+	requiredHeaders(w)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -107,25 +132,4 @@ var notFoundDocument = &Document{
 
 func notFoundHandler(w http.ResponseWriter, req *http.Request) {
 	DoPage(w, req, notFoundDocument, http.StatusNotFound)
-}
-
-func homeHandler(w http.ResponseWriter, req *http.Request) {
-	if req.URL.Path != "/" {
-		notFoundHandler(w, req)
-		return
-	}
-	DoPage(w, req, HomeDocument(), http.StatusOK)
-}
-
-func HomeDocument() *Document {
-	return &Document{
-		"Test",
-		Content{
-			&Paragraph{
-				Content{
-					&LeafElement{"Test"},
-				},
-			},
-		},
-	}
 }

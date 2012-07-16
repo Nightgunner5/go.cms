@@ -15,3 +15,13 @@ type Paragraph struct {
 func (para *Paragraph) Element() Element {
 	return para
 }
+
+type Article struct {
+	Title string
+	Timestamp time.Time
+	Content
+}
+
+func (article *Article) Element() Element {
+	return article
+}
