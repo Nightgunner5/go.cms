@@ -1,4 +1,3 @@
-// Credit for the idea for this package goes to https://github.com/daaku/go.h.
 package document
 
 // Dummy interface to allow somewhat stronger typing.
