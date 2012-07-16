@@ -32,16 +32,17 @@ const (
 )
 
 func FromElement(buf []byte, element document.Element) ([]byte, error) {
+	var err error
 	switch el := element.(type) {
 		case *document.Document:
 			buf = append(buf, byte(Document))
-			buf, err := FromString(buf, el.Title)
+			buf, err = FromString(buf, el.Title)
 			if err != nil {
 				return nil, err
 			}
 		case *document.Article:
 			buf = append(buf, byte(Article))
-			buf, err := FromString(buf, el.Title)
+			buf, err = FromString(buf, el.Title)
 			if err != nil {
 				return nil, err
 			}
@@ -59,7 +60,7 @@ func FromElement(buf []byte, element document.Element) ([]byte, error) {
 			buf = append(buf, byte(Bold))
 		case *document.Image:
 			buf = append(buf, byte(Image))
-			buf, err := FromString(buf, el.URL)
+			buf, err = FromString(buf, el.URL)
 			if err != nil {
 				return nil, err
 			}
@@ -69,13 +70,13 @@ func FromElement(buf []byte, element document.Element) ([]byte, error) {
 			}
 		case *document.Link:
 			buf = append(buf, byte(Link))
-			buf, err := FromString(buf, el.URL)
+			buf, err = FromString(buf, el.URL)
 			if err != nil {
 				return nil, err
 			}
 		case *document.LeafElement:
 			buf = append(buf, byte(LeafElement))
-			buf, err := FromString(buf, el.Text)
+			buf, err = FromString(buf, el.Text)
 			if err != nil {
 				return nil, err
 			}
@@ -84,7 +85,7 @@ func FromElement(buf []byte, element document.Element) ([]byte, error) {
 	}
 	if con, ok := element.(document.Container); ok {
 		for _, el := range con.Contents() {
-			buf, err := FromElement(buf, el)
+			buf, err = FromElement(buf, el)
 			if err != nil {
 				return nil, err
 			}
@@ -99,20 +100,24 @@ func ToElement(buf []byte) (document.Element, []byte, error) {
 
 	elementType := ElementType(buf[0])
 	buf = buf[1:]
+	var err error
 
 	switch elementType {
 		case Document:
-			title, buf, err := ToString(buf)
+			var title string
+			title, buf, err = ToString(buf)
 			if err != nil {
 				return nil, nil, err
 			}
 			element = &document.Document{title, document.Content{}}
 		case Article:
-			title, buf, err := ToString(buf)
+			var title string
+			title, buf, err = ToString(buf)
 			if err != nil {
 				return nil, nil, err
 			}
-			timestamp, buf, err := ToTime(buf)
+			var timestamp time.Time
+			timestamp, buf, err = ToTime(buf)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -126,23 +131,27 @@ func ToElement(buf []byte) (document.Element, []byte, error) {
 		case Bold:
 			element = &document.Bold{document.Content{}}
 		case Image:
-			url, buf, err := ToString(buf)
+			var url string
+			url, buf, err = ToString(buf)
 			if err != nil {
 				return nil, nil, err
 			}
-			description, buf, err := ToString(buf)
+			var description string
+			description, buf, err = ToString(buf)
 			if err != nil {
 				return nil, nil, err
 			}
 			element = &document.Image{url, description}
 		case Link:
-			url, buf, err := ToString(buf)
+			var url string
+			url, buf, err = ToString(buf)
 			if err != nil {
 				return nil, nil, err
 			}
 			element = &document.Link{url, document.Content{}}
 		case LeafElement:
-			text, buf, err := ToString(buf)
+			var text string
+			text, buf, err = ToString(buf)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -153,7 +162,8 @@ func ToElement(buf []byte) (document.Element, []byte, error) {
 
 	if con, ok := element.(document.Container); ok {
 		for ElementType(buf[0]) != EndOfContent {
-			el, buf, err := ToElement(buf)
+			var el document.Element
+			el, buf, err = ToElement(buf)
 			if err != nil {
 				return nil, nil, err
 			}
