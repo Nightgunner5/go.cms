@@ -10,7 +10,7 @@ func TestDatabase(t *testing.T) {
 		t.Error("ID->Title is incorrect: Want(", want, ") but Got(", got, ")")
 	}
 
-	if want, got := 1, GetArticleIDByURL("welcome-to-go-cms").Title; want != got {
+	if want, got := 1, GetArticleIDByURL("welcome-to-go-cms"); want != got {
 		t.Error("URL->Article ID is incorrect: Want(", want, ") but Got(", got, ")")
 	}
 
