@@ -1,14 +1,15 @@
 package storage
 
 import (
+	"llamaslayers.net/go.cms/document"
+	"llamaslayers.net/go.cms/formatter"
 	"testing"
 	"time"
-	"llamaslayers.net/go.cms/document"
 )
 
 func TestConvertUint32(t *testing.T) {
 	t.Parallel()
-	
+
 	i := uint32(1)
 	buf, err := FromUint32(make([]byte, 0), i)
 	if err != nil {
@@ -41,7 +42,7 @@ func TestConvertUint32(t *testing.T) {
 
 func TestConvertString(t *testing.T) {
 	t.Parallel()
-	
+
 	s1 := "Test string OF SCIENCE"
 	buf, err := FromString(make([]byte, 0), s1)
 	if err != nil {
@@ -61,7 +62,7 @@ func TestConvertString(t *testing.T) {
 
 func TestConvertTime(t *testing.T) {
 	t.Parallel()
-	
+
 	t1 := time.Now()
 	buf, err := FromTime(make([]byte, 0), t1)
 	if err != nil {
@@ -112,7 +113,9 @@ func TestConvertDocument(t *testing.T) {
 	if len(buf) != 0 {
 		t.Error("Leftover buffer size is nonzero: ", len(buf))
 	}
-	if doc1 != doc2 {
-		t.Error("expected(", doc1, ") != result(", doc2, ")")
+	// We can't compare the documents directly because they contain pointers.
+	d1, d2 := formatter.HTML.Format(doc1), formatter.HTML.Format(doc2)
+	if d1 != d2 {
+		t.Error("expected(", d1, ") != result(", d2, ")")
 	}
 }
