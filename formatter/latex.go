@@ -40,6 +40,8 @@ func (LaTeXFormatter) Format(element Element) string {
 	case *LeafElement:
 		// TODO: escaping
 		return el.Text
+	case *Article:
+		return "\\section{" + el.Title + "}\n" + el.Timestamp.Format("15:04 2 Jan 2006") + "\\\\\n" + LaTeX.formatContent(el.Contents())
 	}
 	return fmt.Sprintf("%#v", element)
 }

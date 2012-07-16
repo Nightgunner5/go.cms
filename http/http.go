@@ -99,10 +99,24 @@ func (page *static_page) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func DoPage(w http.ResponseWriter, req *http.Request, doc *Document, status int) {
 	requiredHeaders(w)
+	buf := []byte(formatter.HTML.Format(doc))
+	etag := _etag(buf)
+	if req.Header.Get("If-None-Match") == etag {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	w.Header().Set("Vary", "Accept-Encoding")
+	w.Header().Set("ETag", etag)
+	if len(doc.Contents()) > 0 {
+		if article, ok := doc.Contents()[0].(*Article); ok {
+			w.Header().Set("Last-Modified", article.Timestamp.Format(time.RFC1123))
+		}
+	}
+	w.Header().Set("Expires", time.Now().Add(time.Hour).Format(time.RFC1123))
+
 	if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
-		buf := _compress([]byte(formatter.HTML.Format(doc)), gzip.DefaultCompression)
+		buf := _compress(buf, gzip.DefaultCompression)
 		w.Header().Set("Content-Encoding", "gzip")
 		w.Header().Set("Content-Length", fmt.Sprint(len(buf)))
 		w.WriteHeader(status)
@@ -110,7 +124,6 @@ func DoPage(w http.ResponseWriter, req *http.Request, doc *Document, status int)
 		gz.Write([]byte(formatter.HTML.Format(doc)))
 		gz.Close()
 	} else {
-		buf := []byte(formatter.HTML.Format(doc))
 		w.Header().Set("Content-Length", fmt.Sprint(len(buf)))
 		w.WriteHeader(status)
 		w.Write(buf)

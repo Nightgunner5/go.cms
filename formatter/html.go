@@ -40,6 +40,8 @@ func (HTMLFormatter) Format(element Element) string {
 		return "<a href=\"" + html.EscapeString(el.URL) + "\">" + HTML.formatContent(el.Contents()) + "</a>"
 	case *LeafElement:
 		return html.EscapeString(el.Text)
+	case *Article:
+		return "<article><h1>" + el.Title + " <small>" + el.Timestamp.Format("15:04 2 Jan 2006") + "</small></h1>\n" + HTML.formatContent(el.Contents()) + "</article>"
 	}
 	return fmt.Sprintf("%#v", element)
 }

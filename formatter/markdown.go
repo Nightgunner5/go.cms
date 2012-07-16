@@ -29,6 +29,8 @@ func (MarkdownFormatter) Format(element Element) string {
 		return "[" + Markdown.formatContent(el.Contents()) + "](" + html.EscapeString(el.URL) + ")"
 	case *LeafElement:
 		return html.EscapeString(el.Text)
+	case *Article:
+		return "## " + el.Title + "\n\n" + el.Timestamp.Format("15:04 2 Jan 2006") + "\n\n" + Markdown.formatContent(el.Contents())
 	}
 	return fmt.Sprintf("%#v", element)
 }

@@ -1,6 +1,8 @@
 // Credit for the idea for this package goes to https://github.com/daaku/go.h.
 package document
 
+import "time"
+
 type LineBreak struct {
 }
 
@@ -17,7 +19,7 @@ func (para *Paragraph) Element() Element {
 }
 
 type Article struct {
-	Title string
+	Title     string
 	Timestamp time.Time
 	Content
 }
