@@ -192,13 +192,13 @@ func GetLatestArticles() document.Content {
 
 	content := make(document.Content, 0, 5)
 
-	ids, _ := db.Query("SELECT id FROM articles ORDER BY timestamp DESC LIMIT 5;")
-	defer ids.Close()
+	articles, _ := db.Query("SELECT content FROM articles ORDER BY timestamp DESC LIMIT 5;")
+	defer articles.Close()
 
-	for ids.Next() {
-		var id int64
-		ids.Scan(&id)
-		content = append(content, GetArticleByID(id))
+	for contents.Next() {
+		var blob []byte
+		articles.Scan(&blob)
+		content = append(content, ToElement(blob))
 	}
 
 	return content
